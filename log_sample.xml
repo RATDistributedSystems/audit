@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="style.xsl"?>
+<userCommand>
+  <timestamp>9433</timestamp>
+  <server>SN6</server>
+  <transactionNum>89</transactionNum>
+  <command>BUY</command>
+  <username>user1</username>
+  <funds>300.00</funds>
+</userCommand>
+<quoteServer>
+  <timestamp>9838</timestamp>
+  <server>N6</server>
+  <transactionNum>90</transactionNum>
+  <quoteTime>08943</quoteTime>
+  <username>user2</username>
+  <stockSymbol>XYZ</stockSymbol>
+  <price>99.66</price>
+  <cryptokey>kjhdf832ihfkl8fj</cryptokey>
+</quoteServer>
+<systemEvent>
+  <timestamp>474784</timestamp>
+  <server>Z89</server>
+  <transactionNum>92</transactionNum>
+  <command>QUOTE</command>
+  <username>system1</username>
+  <stockSymbol>BNM</stockSymbol>
+  <funds>66.88</funds>
+</systemEvent>
+<errorEvent>
+  <timestamp>3904</timestamp>
+  <server>S8</server>
+  <transactionNum>93</transactionNum>
+  <command>BUY</command>
+  <username>user4</username>
+  <stockSymbol>GTY</stockSymbol>
+  <funds>999.00</funds>
+  <errorMessage>Insufficient funds</errorMessage>
+</errorEvent>
+<accountTransaction>
+  <timestamp>040302</timestamp>
+  <server>P9</server>
+  <transactionNum>91</transactionNum>
+  <action>SELL</action>
+  <username>user1</username>
+  <funds>299.99</funds>
+</accountTransaction>
