@@ -133,5 +133,27 @@ func error_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd
 }
 
 //debugging messages, user commands, optional debug message
+func debug_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, stocksym string, file string, fund string, debug string){
+	root := doc.Root()
+	debugEvent := root.CreateElement("debugEvent")
+	timestamp := debugEvent.CreateElement("timestamp")
+	timestamp.CreateCharData(ts)
+	server := debugEvent.CreateElement("server")
+	server.CreateCharData(srvr)
+	transactionNum := debugEvent.CreateElement("transactionNum")
+	transactionNum.CreateCharData(trsNum)
+	command := debugEvent.CreateElement("command")
+	command.CreateCharData(cmd)
+	username := debugEvent.CreateElement("username")
+	username.CreateCharData(uname)
+	stockSymbol := debugEvent.CreateElement("stockSymbol")
+	stockSymbol.CreateCharData(stocksym)
+	filename := debugEvent.CreateElement("filename")
+	filename.CreateCharData(file)
+	funds := debugEvent.CreateElement("funds")
+	funds.CreateCharData(fund)
+	debugMessage := debugEvent.CreateElement("debugMessage")
+	debugMessage.CreateCharData(debug)
+}
 
 
