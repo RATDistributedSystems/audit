@@ -12,14 +12,16 @@ func main(){
 	
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
-	doc.CreateProcInst("xml-stylesheet", `type="text/xsl" href="style.xsl"`)
+	root := etree.NewElement("log")
+	doc.SetRoot(root)
 
 
-	user_command(doc, "9433", "SN6", "89", "BUY", "user1", "300.00")
-	quote_server(doc, "9838", "N6", "90", "08943", "user2", "XYZ", "99.66", "kjhdf832ihfkl8fj")
-	system_event(doc, "474784", "Z89", "92", "QUOTE", "system1", "BNM", "66.88")
-	error_event(doc, "3904", "S8", "93", "BUY", "user4", "GTY", "999.00", "Insufficient funds")
-	account_transaction(doc, "040302", "P9", "91", "SELL", "user1", "299.99")
+	//TODO: filter out type of request received and create appropriate XML
+	user_command(doc, "1514764800000", "SN6", "89", "BUY", "user1", "300.00")
+	quote_server(doc, "1514764800000", "N6", "90", "08943", "user2", "XYZ", "99.66", "kjhdf832ihfkl8fj")
+	system_event(doc, "1514764800000", "Z89", "92", "QUOTE", "system1", "BNM", "66.88")
+	error_event(doc, "1514764800000", "S8", "93", "BUY", "user4", "GTY", "999.00", "Insufficient funds")
+	account_transaction(doc, "1514764800000", "P9", "91", "SELL", "user1", "299.99")
 
 
 
@@ -32,7 +34,8 @@ func main(){
 
 //receive an user command
 func user_command(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, fund string){
-	userCommand := doc.CreateElement("userCommand")
+	root := doc.Root()
+	userCommand := root.CreateElement("userCommand")
 	timestamp := userCommand.CreateElement("timestamp")
 	timestamp.CreateCharData(ts)
 	server := userCommand.CreateElement("server")
@@ -51,14 +54,15 @@ func user_command(doc *etree.Document, ts string, srvr string, trsNum string, cm
 
 //hit to quote server
 func quote_server(doc *etree.Document, ts string, srvr string, trsNum string, quoteTime string, uname string, stocksym string, pric string, crypto string){
-	quoteServer := doc.CreateElement("quoteServer")
+	root := doc.Root()
+	quoteServer := root.CreateElement("quoteServer")
 	timestamp := quoteServer.CreateElement("timestamp")
 	timestamp.CreateCharData(ts)
 	server := quoteServer.CreateElement("server")
 	server.CreateCharData(srvr)
 	transactionNum := quoteServer.CreateElement("transactionNum")
 	transactionNum.CreateCharData(trsNum)
-	quoteServerTime := quoteServer.CreateElement("quoteTime")
+	quoteServerTime := quoteServer.CreateElement("quoteServerTime")
 	quoteServerTime.CreateCharData(quoteTime)
 	username := quoteServer.CreateElement("username")
 	username.CreateCharData(uname)
@@ -72,7 +76,8 @@ func quote_server(doc *etree.Document, ts string, srvr string, trsNum string, qu
 }
 //user account touch. Add remove
 func account_transaction(doc *etree.Document, ts string, srvr string, trsNum string, act string, uname string, fund string){
-	accountTransaction := doc.CreateElement("accountTransaction")
+	root := doc.Root()
+	accountTransaction := root.CreateElement("accountTransaction")
 	timestamp := accountTransaction.CreateElement("timestamp")
 	timestamp.CreateCharData(ts)
 	server := accountTransaction.CreateElement("server")
@@ -88,7 +93,8 @@ func account_transaction(doc *etree.Document, ts string, srvr string, trsNum str
 }
 //system events. current user commands, inter"server" communication, execution trigger
 func system_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, stocksym string, fund string){
-	systemEvent := doc.CreateElement("systemEvent")
+	root := doc.Root()
+	systemEvent := root.CreateElement("systemEvent")
 	timestamp := systemEvent.CreateElement("timestamp")
 	timestamp.CreateCharData(ts)
 	server := systemEvent.CreateElement("server")
@@ -106,7 +112,8 @@ func system_event(doc *etree.Document, ts string, srvr string, trsNum string, cm
 }
 //error messages, user commands, optional error message
 func error_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, stocksym string, fund string, err string){
-	errorEvent := doc.CreateElement("errorEvent")
+	root := doc.Root()
+	errorEvent := root.CreateElement("errorEvent")
 	timestamp := errorEvent.CreateElement("timestamp")
 	timestamp.CreateCharData(ts)
 	server := errorEvent.CreateElement("server")
