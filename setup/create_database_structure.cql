@@ -1,3 +1,5 @@
+CREATE KEYSPACE USERDB with replication = {'class':'SimpleStrategy','replication_factor':1};
+
 CREATE TABLE userdb.usercommands (
     time bigint,
     server text,
