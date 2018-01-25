@@ -6,7 +6,7 @@ import (
 )
 
 
-
+/*
 func main(){
 	
 	
@@ -30,6 +30,7 @@ func main(){
 
 
 }
+*/
 
 
 //receive an user command

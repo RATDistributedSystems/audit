@@ -5,8 +5,8 @@ CREATE TABLE userdb.usercommands (
     command text,
     userid text,
     funds text,
-    PRIMARY KEY((userid), pid)
-) WITH CLUSTERING ORDER BY (pid DESC)
+    PRIMARY KEY((userid), time)
+) WITH CLUSTERING ORDER BY (time DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -31,8 +31,8 @@ CREATE TABLE userdb.quote_server (
     stocksymbol text,
     price text,
     cryptokey text,
-    PRIMARY KEY((userid), pid)
-) WITH CLUSTERING ORDER BY (timestamp DESC)
+    PRIMARY KEY((userid), time)
+) WITH CLUSTERING ORDER BY (time DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -55,8 +55,8 @@ CREATE TABLE userdb.account_transaction(
     action text,
     userid text,
     funds text,
-    PRIMARY KEY((userid), pid)
-) WITH CLUSTERING ORDER BY (timestamp DESC)
+    PRIMARY KEY((userid), time)
+) WITH CLUSTERING ORDER BY (time DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -80,8 +80,8 @@ CREATE TABLE userdb.system_event(
     userid text,
     stocksymbol text,
     funds text,
-    PRIMARY KEY((userid), pid)
-) WITH CLUSTERING ORDER BY (timestamp DESC)
+    PRIMARY KEY((userid), time)
+) WITH CLUSTERING ORDER BY (time DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -106,8 +106,8 @@ CREATE TABLE userdb.error_event(
     stocksymbol text,
     funds text,
     errorMessage text,
-    PRIMARY KEY((userid), pid)
-) WITH CLUSTERING ORDER BY (timestamp DESC)
+    PRIMARY KEY((userid), time)
+) WITH CLUSTERING ORDER BY (time DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
@@ -134,8 +134,8 @@ CREATE TABLE userdb.debug_event(
     filename text,
     funds text,
     debugMessage text,
-    PRIMARY KEY((userid), pid)
-) WITH CLUSTERING ORDER BY (timestamp DESC)
+    PRIMARY KEY((userid), time)
+) WITH CLUSTERING ORDER BY (time DESC)
     AND bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<log>
+  <userCommand>
+    <timestamp>1516862866528281000</timestamp>
+    <server>TS1</server>
+    <transactionNum>1</transactionNum>
+    <command>SELL</command>
+    <username>Jones</username>
+    <funds>999.00</funds>
+  </userCommand>
+</log>
