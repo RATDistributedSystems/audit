@@ -45,12 +45,19 @@ func user_command(doc *etree.Document, ts string, srvr string, trsNum string, cm
 	transactionNum.CreateCharData(trsNum)
 	command := userCommand.CreateElement("command")
 	command.CreateCharData(cmd)
-	username := userCommand.CreateElement("username")
-	username.CreateCharData(uname)
-	stockSymbol := userCommand.CreateElement("stockSymbol")
-	stockSymbol.CreateCharData(stockSym)
-	funds := userCommand.CreateElement("funds")
-	funds.CreateCharData(fund)
+	if uname != ""{
+		username := userCommand.CreateElement("username")
+		username.CreateCharData(uname)
+	}
+	if stockSym != ""{
+		stockSymbol := userCommand.CreateElement("stockSymbol")
+		stockSymbol.CreateCharData(stockSym)		
+	}
+	if fund != ""{
+		funds := userCommand.CreateElement("funds")
+		funds.CreateCharData(fund)		
+	}
+
 
 
 }
@@ -106,12 +113,19 @@ func system_event(doc *etree.Document, ts string, srvr string, trsNum string, cm
 	transactionNum.CreateCharData(trsNum)
 	command := systemEvent.CreateElement("command")
 	command.CreateCharData(cmd)
-	username := systemEvent.CreateElement("username")
-	username.CreateCharData(uname)
-	stockSymbol := systemEvent.CreateElement("stockSymbol")
-	stockSymbol.CreateCharData(stocksym)
-	funds := systemEvent.CreateElement("funds")
-	funds.CreateCharData(fund)
+	if uname != ""{
+		username := systemEvent.CreateElement("username")
+		username.CreateCharData(uname)
+	}
+	if stocksym != ""{
+		stockSymbol := systemEvent.CreateElement("stockSymbol")
+		stockSymbol.CreateCharData(stocksym)
+	}
+	if fund != ""{
+		funds := systemEvent.CreateElement("funds")
+		funds.CreateCharData(fund)
+	}
+
 }
 //error messages, user commands, optional error message
 func error_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, stocksym string, fund string, err string){
@@ -125,18 +139,30 @@ func error_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd
 	transactionNum.CreateCharData(trsNum)
 	command := errorEvent.CreateElement("command")
 	command.CreateCharData(cmd)
-	username := errorEvent.CreateElement("username")
-	username.CreateCharData(uname)
-	stockSymbol := errorEvent.CreateElement("stockSymbol")
-	stockSymbol.CreateCharData(stocksym)
-	funds := errorEvent.CreateElement("funds")
-	funds.CreateCharData(fund)
-	errorMessage := errorEvent.CreateElement("errorMessage")
-	errorMessage.CreateCharData(err)
+	if uname != ""{
+		username := errorEvent.CreateElement("username")
+		username.CreateCharData(uname)
+	}
+
+	if stocksym != ""{
+		stockSymbol := errorEvent.CreateElement("stockSymbol")
+		stockSymbol.CreateCharData(stocksym)
+	}
+
+	if fund != ""{
+		funds := errorEvent.CreateElement("funds")
+		funds.CreateCharData(fund)
+	}
+	
+	if err != ""{
+		errorMessage := errorEvent.CreateElement("errorMessage")
+		errorMessage.CreateCharData(err)		
+	}
+
 }
 
 //debugging messages, user commands, optional debug message
-func debug_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, stocksym string, file string, fund string, debug string){
+func debug_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, stocksym string, fund string, debug string){
 	root := doc.Root()
 	debugEvent := root.CreateElement("debugEvent")
 	timestamp := debugEvent.CreateElement("timestamp")
@@ -147,16 +173,25 @@ func debug_event(doc *etree.Document, ts string, srvr string, trsNum string, cmd
 	transactionNum.CreateCharData(trsNum)
 	command := debugEvent.CreateElement("command")
 	command.CreateCharData(cmd)
-	username := debugEvent.CreateElement("username")
-	username.CreateCharData(uname)
-	stockSymbol := debugEvent.CreateElement("stockSymbol")
-	stockSymbol.CreateCharData(stocksym)
-	filename := debugEvent.CreateElement("filename")
-	filename.CreateCharData(file)
-	funds := debugEvent.CreateElement("funds")
-	funds.CreateCharData(fund)
-	debugMessage := debugEvent.CreateElement("debugMessage")
-	debugMessage.CreateCharData(debug)
+	if uname != ""{
+		username := debugEvent.CreateElement("username")
+		username.CreateCharData(uname)
+	}
+
+	if stocksym != ""{
+		stockSymbol := debugEvent.CreateElement("stockSymbol")
+		stockSymbol.CreateCharData(stocksym)
+	}
+
+	if fund != ""{
+		funds := debugEvent.CreateElement("funds")
+		funds.CreateCharData(fund)
+	}
+	
+	if debug != ""{
+		errorMessage := debugEvent.CreateElement("errorMessage")
+		errorMessage.CreateCharData(debug)		
+	}
 }
 
 
