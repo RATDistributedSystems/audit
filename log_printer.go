@@ -34,7 +34,7 @@ func main(){
 
 
 //receive an user command
-func user_command(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, fund string){
+func user_command(doc *etree.Document, ts string, srvr string, trsNum string, cmd string, uname string, stockSym string, fund string){
 	root := doc.Root()
 	userCommand := root.CreateElement("userCommand")
 	timestamp := userCommand.CreateElement("timestamp")
@@ -47,6 +47,8 @@ func user_command(doc *etree.Document, ts string, srvr string, trsNum string, cm
 	command.CreateCharData(cmd)
 	username := userCommand.CreateElement("username")
 	username.CreateCharData(uname)
+	stockSymbol := userCommand.CreateElement("stockSymbol")
+	stockSymbol.CreateCharData(stockSym)
 	funds := userCommand.CreateElement("funds")
 	funds.CreateCharData(fund)
 

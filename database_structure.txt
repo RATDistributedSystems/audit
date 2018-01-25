@@ -4,6 +4,7 @@ CREATE TABLE userdb.usercommands (
     transactionNum int,
     command text,
     userid text,
+    stockSymbol text,
     funds text,
     PRIMARY KEY((userid), time)
 ) WITH CLUSTERING ORDER BY (time DESC)
