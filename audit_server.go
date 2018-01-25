@@ -89,35 +89,6 @@ func handleRequest(conn net.Conn) {
         go dump(result[1])
       }
     }
-
-    if len(result) != 2 || len(result[0]) != 3 {
-      conn.Write([]byte("NA"))
-      conn.Close()
-    //correct input
-    } else {
-      username := result[1]
-      username = strings.TrimSpace(username)
-      stock_sym := result[0]
-      stock_sym = strings.TrimSpace(stock_sym)
-      r := rand.New(rand.NewSource(time.Now().UnixNano()))
-      //generate random price
-      rand_price := r.Float64() * float64(rand.Intn(1000))
-      stock_price := strconv.FormatFloat(rand_price, 'f', 2, 64)
-      //get curret timestamp in UTC
-      t := time.Now().UTC().UnixNano()
-      time := strconv.Itoa(int(t))
-      //generate cryptokey
-      crypto := "7777777777"
-      /*
-      print(stock_price + ",")
-      print(result[0] +",")
-      print(result[1] + ",")
-      print(time + ",")
-      print(crypto)
-      */
-      fmt.Fprintf(conn, stock_price + "," + stock_sym + "," + username + "," + time + "," + crypto)
-
-    }
   // Close the connection when you're done with it.
   conn.Close()
 }
