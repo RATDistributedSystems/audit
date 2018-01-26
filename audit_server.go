@@ -113,7 +113,6 @@ func logUserEvent(result []string){
 
 func logQuoteEvent(result []string){
 
-
   if err := sessionGlobal.Query("INSERT INTO quote_server (time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4]+ "', '" + result[5]+ "', '" + result[6] + "' , " + result[7] + ", '" + result[8] + "')").Exec(); err != nil {
     panic(fmt.Sprintf("problem creating session", err))
   }
@@ -249,9 +248,9 @@ func dump(filename string){
 
   if (count != 0){
 
-    iter := sessionGlobal.Query("SELECT time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey FROM quote_server ").Iter()
-    for iter.Scan(&time, &server, &transactionNum, &price, &stockSymbol, &userId, &quoteservertime, &cryptokey) {
-        quote_server(doc, time, server, transactionNum, price, stockSymbol, userId, quoteservertime, cryptokey)
+    iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server ").Iter()
+    for iter.Scan(&time, &server, &transactionNum, &quoteservertime, &userId, &stockSymbol, &price, &cryptokey) {
+        quote_server(doc, time, server, transactionNum, quoteservertime, userId, stockSymbol, price, cryptokey)
       }
     
     if err := iter.Close(); err != nil {
