@@ -6,15 +6,12 @@ import (
     "os"
     "bufio"
     "strings"
-    "math/rand"
-    "time"
-    "strconv"
     "github.com/gocql/gocql"
     "github.com/beevik/etree"
 )
 
 const (
-    CONN_HOST = "192.168.3.102"
+    CONN_HOST = "localhost"
     CONN_PORT = "5555"
     CONN_TYPE = "tcp"
 )
@@ -71,15 +68,15 @@ func handleRequest(conn net.Conn) {
     }
     //add error event to db
     if result[0] == "Error"{
-      
+      go logErrorEvent(result)
     }
 
     //add account to db
     //time, server, transactionNum, action, userid, funds
     if result[0] == "Account"{
-      
+      go logAccountTransactionEvent(result)
     }
-
+    fmt.Println(result[0])
     if result[0] == "DUMPLOG"{
       if len(result) == 3{
         //DUMP with specific user
@@ -94,7 +91,7 @@ func handleRequest(conn net.Conn) {
 }
 
 func logUserEvent(result []string){
-  cluster := gocql.NewCluster("192.168.3.103")
+  cluster := gocql.NewCluster("localhost")
   cluster.Keyspace = "userdb"
   cluster.ProtoVersion = 4
   session, err := cluster.CreateSession()
@@ -110,7 +107,7 @@ func logUserEvent(result []string){
 }
 
 func logQuoteEvent(result []string){
-  cluster := gocql.NewCluster("192.168.3.103")
+  cluster := gocql.NewCluster("localhost")
   cluster.Keyspace = "userdb"
   cluster.ProtoVersion = 4
   session, err := cluster.CreateSession()
@@ -126,7 +123,7 @@ func logQuoteEvent(result []string){
 }
 
 func logSystemEvent(result []string){
-  cluster := gocql.NewCluster("192.168.3.103")
+  cluster := gocql.NewCluster("localhost")
   cluster.Keyspace = "userdb"
   cluster.ProtoVersion = 4
   session, err := cluster.CreateSession()
@@ -135,14 +132,14 @@ func logSystemEvent(result []string){
     panic(fmt.Sprintf("problem creating session", err))
   }
 
-  if err := session.Query("INSERT INTO system_event (time, server, transactionNum, command, userid, stocksymbol, funds) VALUES ('" + result[1] + "', " + result[2] + "', " + result[3] + "', " + result[4]+ "', " + result[5]+ "', " + result[6]+ "', " + result[7] + ")").Exec(); err != nil {
+  if err := session.Query("INSERT INTO system_event (time, server, transactionNum, command, userid, stocksymbol, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4]+ "', '" + result[5]+ "', '" + result[6]+ "', '" + result[7] + "')").Exec(); err != nil {
     panic(fmt.Sprintf("problem creating session", err))
   }
   
 }
 
 func logAccountTransactionEvent(result []string){
-  cluster := gocql.NewCluster("192.168.3.103")
+  cluster := gocql.NewCluster("localhost")
   cluster.Keyspace = "userdb"
   cluster.ProtoVersion = 4
   session, err := cluster.CreateSession()
@@ -151,14 +148,14 @@ func logAccountTransactionEvent(result []string){
     panic(fmt.Sprintf("problem creating session", err))
   }
 
-  if err := session.Query("INSERT INTO account_transaction (time, server, transactionNum, action, userid, funds) VALUES (" + result[1] + ", '" + result[2] + "', '" + result[3] + "', '" + result[4]+ "', '" + result[5]+ "', '" + result[6] + "')").Exec(); err != nil {
+  if err := session.Query("INSERT INTO account_transaction (time, server, transactionNum, action, userid, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4]+ "', '" + result[5]+ "', '" + result[6] + "')").Exec(); err != nil {
     panic(fmt.Sprintf("problem creating session", err))
   }
   
 }
 
 func logErrorEvent(result []string){
-  cluster := gocql.NewCluster("192.168.3.103")
+  cluster := gocql.NewCluster("localhost")
   cluster.Keyspace = "userdb"
   cluster.ProtoVersion = 4
   session, err := cluster.CreateSession()
@@ -174,7 +171,7 @@ func logErrorEvent(result []string){
 }
 
 func logDebugEvent(result []string){
-  cluster := gocql.NewCluster("192.168.3.103")
+  cluster := gocql.NewCluster("localhost")
   cluster.Keyspace = "userdb"
   cluster.ProtoVersion = 4
   session, err := cluster.CreateSession()
@@ -191,7 +188,7 @@ func logDebugEvent(result []string){
 
 
 func dumpUser(userId string, filename string){
-  cluster := gocql.NewCluster("192.168.3.103")
+  cluster := gocql.NewCluster("localhost")
   cluster.Keyspace = "userdb"
   cluster.ProtoVersion = 4
   session, err := cluster.CreateSession()
@@ -202,6 +199,8 @@ func dumpUser(userId string, filename string){
   var command string
   var stockSymbol string
   var funds string
+
+  fmt.Println("In dump user with " + userId + " and " + filename)
 
   if err != nil {
     panic(fmt.Sprintf("problem creating session", err))
@@ -239,7 +238,7 @@ func dumpUser(userId string, filename string){
 
 func dump(filename string){
   
-  cluster := gocql.NewCluster("192.168.3.103")
+  cluster := gocql.NewCluster("localhost")
   cluster.Keyspace = "userdb"
   cluster.ProtoVersion = 4
   session, err := cluster.CreateSession()
@@ -328,7 +327,7 @@ func dump(filename string){
 
     iter := session.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM system_event ").Iter()
     for iter.Scan(&time, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
-        user_command(doc, time, server, transactionNum, command, userId, stockSymbol, funds)
+        system_event(doc, time, server, transactionNum, command, userId, stockSymbol, funds)
       }
     
     if err := iter.Close(); err != nil {
@@ -345,7 +344,7 @@ func dump(filename string){
     
     iter := session.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage FROM error_event ").Iter()
     for iter.Scan(&time, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &errorMessage) {
-        user_command(doc, time, server, transactionNum, command, userId, stockSymbol, funds)
+        error_event(doc, time, server, transactionNum, command, userId, stockSymbol, funds, errorMessage)
       }
     
     if err := iter.Close(); err != nil {
@@ -362,7 +361,7 @@ func dump(filename string){
     
     iter := session.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage FROM debug_event ").Iter()
     for iter.Scan(&time, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &debugMessage) {
-        user_command(doc, time, server, transactionNum, command, userId, stockSymbol, funds)
+        debug_event(doc, time, server, transactionNum, command, userId, stockSymbol, funds,debugMessage)
       }
     
     if err := iter.Close(); err != nil {
