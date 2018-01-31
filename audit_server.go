@@ -66,36 +66,36 @@ func handleRequest(conn net.Conn) {
     //add user event to database
     //time, server, transactionNum, command, userid, funds
     if result[0] == "User"{
-      go logUserEvent(result)
+      logUserEvent(result)
     }
     //add quote event to database
     //time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey
     if result[0] == "Quote"{
-      go logQuoteEvent(result)
+      logQuoteEvent(result)
     }
     //add system event to database
     //
     if result[0] == "System"{
-      go logSystemEvent(result)
+      logSystemEvent(result)
     }
     //add error event to db
     if result[0] == "Error"{
-      go logErrorEvent(result)
+      logErrorEvent(result)
     }
 
     //add account to db
     //time, server, transactionNum, action, userid, funds
     if result[0] == "Account"{
-      go logAccountTransactionEvent(result)
+      logAccountTransactionEvent(result)
     }
     fmt.Println(result[0])
     if result[0] == "DUMPLOG"{
       if len(result) == 3{
         //DUMP with specific user
-        go dumpUser(result[1],result[2])
+        dumpUser(result[1],result[2])
       } else if len(result) == 2 {
         //DUMP everything
-        go dump(result[1])
+        dump(result[1])
       }
     }
   // Close the connection when you're done with it.
