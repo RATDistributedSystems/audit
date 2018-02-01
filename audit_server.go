@@ -148,6 +148,7 @@ func dumpUser(userId string, filename string) {
 	var command string
 	var stockSymbol string
 	var funds string
+	filename = strings.TrimSpace(strings.TrimSuffix(filename, "\n"))
 	filename = addTimestampToFilename(filename)
 
 	log.Printf("Dumping user %s to file: %s\n", userId, filename)
@@ -187,11 +188,9 @@ func dump(filename string) {
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	root := etree.NewElement("log")
 	doc.SetRoot(root)
+	filename = strings.TrimSpace(strings.TrimSuffix(filename, "\n"))
 	filename = addTimestampToFilename(filename)
 	log.Printf("Dumping all users to %s\n", filename)
-
-	filename = strings.TrimSuffix(filename, "\n")
-	filename = strings.TrimSpace(filename)
 
 	var time string
 	var server string
