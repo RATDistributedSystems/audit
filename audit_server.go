@@ -204,6 +204,9 @@ func dump(filename string) {
 	root := etree.NewElement("log")
 	doc.SetRoot(root)
 
+	filename = strings.TrimSuffix(filename, "\n")
+	filename = strings.TrimSpace(filename)
+
 	var time string
 	var server string
 	var transactionNum string
