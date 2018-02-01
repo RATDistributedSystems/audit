@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/RATDistributedSystems/utilities"
 	"github.com/beevik/etree"
@@ -41,6 +42,7 @@ func main() {
 	}
 	// Close the listener when the application closes.
 	defer l.Close()
+	var wg sync.WaitGroup
 	fmt.Println("Listening on " + addr)
 	for {
 		// Listen for an incoming connection.
@@ -50,12 +52,12 @@ func main() {
 			os.Exit(1)
 		}
 		// Handle connections in a new goroutine.
-		go handleRequest(conn)
+		go handleRequest(conn, &wg)
 	}
 }
 
 // Handles incoming requests.
-func handleRequest(conn net.Conn) {
+func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 	// will listen for message to process ending in newline (\n)
 	print("received request")
 	message, _ := bufio.NewReader(conn).ReadString('\n')
@@ -69,36 +71,54 @@ func handleRequest(conn net.Conn) {
 
 	//add user event to database
 	//time, server, transactionNum, command, userid, funds
+	
 	if result[0] == "User" {
+		wg.Add(1)
 		logUserEvent(result)
+		wg.Done()
+
 	}
 	//add quote event to database
 	//time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey
 	if result[0] == "Quote" {
+		wg.Add(1)
 		logQuoteEvent(result)
+		wg.Done()
+
 	}
 	//add system event to database
 	//
 	if result[0] == "System" {
+		wg.Add(1)
 		logSystemEvent(result)
+		wg.Done()
+
 	}
 	//add error event to db
 	if result[0] == "Error" {
+		wg.Add(1)
 		logErrorEvent(result)
+		wg.Done()
 	}
 
 	//add account to db
 	//time, server, transactionNum, action, userid, funds
 	if result[0] == "Account" {
+		wg.Add(1)
 		logAccountTransactionEvent(result)
+		wg.Done()
+
+
 	}
 	fmt.Println(result[0])
 	if result[0] == "DUMPLOG" {
 		if len(result) == 3 {
 			//DUMP with specific user
+			wg.Wait()
 			dumpUser(result[1], result[2])
 		} else if len(result) == 2 {
 			//DUMP everything
+			wg.Wait()
 			dump(result[1])
 		}
 	}
@@ -106,56 +126,63 @@ func handleRequest(conn net.Conn) {
 	conn.Close()
 }
 
-func logUserEvent(result []string) {
+func logUserEvent(result []string, wg *sync.WaitGroup) {
 
 	if err := sessionGlobal.Query("INSERT INTO usercommands (time, server, transactionNum, command, userid, stockSymbol, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , '" + result[7] + "')").Exec(); err != nil {
 		panic(fmt.Sprintf("problem creating session", err))
 	}
 
+
 }
 
-func logQuoteEvent(result []string) {
+func logQuoteEvent(result []string, wg *sync.WaitGroup) {
 
 	if err := sessionGlobal.Query("INSERT INTO quote_server (time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , " + result[7] + ", '" + result[8] + "')").Exec(); err != nil {
 		panic(fmt.Sprintf("problem creating session", err))
 	}
 
+
 }
 
-func logSystemEvent(result []string) {
+func logSystemEvent(result []string, wg *sync.WaitGroup) {
 
 	if err := sessionGlobal.Query("INSERT INTO system_event (time, server, transactionNum, command, userid, stocksymbol, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "', '" + result[7] + "')").Exec(); err != nil {
 		panic(fmt.Sprintf("problem creating session", err))
 	}
 
+
 }
 
-func logAccountTransactionEvent(result []string) {
+func logAccountTransactionEvent(result []string, wg *sync.WaitGroup) {
 
 	if err := sessionGlobal.Query("INSERT INTO account_transaction (time, server, transactionNum, action, userid, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "')").Exec(); err != nil {
 		panic(fmt.Sprintf("problem creating session", err))
 	}
 
+
 }
 
-func logErrorEvent(result []string) {
+func logErrorEvent(result []string, wg *sync.WaitGroup) {
 
 	if err := sessionGlobal.Query("INSERT INTO error_event (time, server, transactionNum, command, userid, stocksymbols, funds, errorMessage) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + "', '" + result[4] + "', '" + result[5] + "', '" + result[6] + "', '" + result[7] + "', '" + result[8] + "', '" + result[9] + "')").Exec(); err != nil {
 		panic(fmt.Sprintf("problem creating session", err))
 	}
 
+
 }
 
-func logDebugEvent(result []string) {
+func logDebugEvent(result []string, wg *sync.WaitGroup) {
 
 	if err := sessionGlobal.Query("INSERT INTO debug_event (time, server, transactionNum, command, userid, stocksymbols, funds, debugMessage) VALUES ('" + result[1] + "', " + result[2] + "', " + result[3] + "', " + result[4] + "', " + result[5] + "', " + result[6] + "', " + result[7] + "', " + result[8] + "', " + result[9] + ")").Exec(); err != nil {
 		panic(fmt.Sprintf("problem creating session", err))
 	}
 
+
 }
 
-func dumpUser(userId string, filename string) {
+func dumpUser(userId string, filename string, wg *sync.WaitGroup) {
 
+	wg.Wait()
 	var time string
 	var server string
 	var transactionNum string
@@ -195,8 +222,10 @@ func dumpUser(userId string, filename string) {
 
 }
 
-func dump(filename string) {
+func dump(filename string, wg *sync.WaitGroup) {
 
+	
+	wg.Wait()
 	fmt.Println("Starting dump log")
 
 	doc := etree.NewDocument()
