@@ -7,6 +7,8 @@ import (
 	"net"
 	"strconv"
 	"strings"
+
+	"sync"
 	gotime "time"
 
 	"github.com/RATDistributedSystems/utilities"
@@ -41,6 +43,7 @@ func main() {
 	}
 	// Close the listener when the application closes.
 	defer l.Close()
+	var wg sync.WaitGroup
 	fmt.Println("Listening on " + addr)
 	for {
 		// Listen for an incoming connection.
@@ -49,44 +52,68 @@ func main() {
 			log.Fatalln(err.Error())
 		}
 		// Handle connections in a new goroutine.
-		go handleRequest(conn)
+		go handleRequest(conn, &wg)
 	}
 }
 
 // Handles incoming requests.
-func handleRequest(conn net.Conn) {
+
+func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
+	// will listen for message to process ending in newline (\n)
+	print("received request")
+
 	message, _ := bufio.NewReader(conn).ReadString('\n')
 	message = strings.TrimSpace(strings.TrimSuffix(message, "\n"))
 	log.Printf("Received request: %s\n", message)
 	result := strings.Split(string(message), ",")
 	defer conn.Close()
 
+	//add user event to database
+	//time, server, transactionNum, command, userid, funds
+	
 	if result[0] == "User" {
+		wg.Add(1)
 		logUserEvent(result)
+		wg.Done()
+
 	}
 
 	if result[0] == "Quote" {
+		wg.Add(1)
 		logQuoteEvent(result)
+		wg.Done()
+
 	}
 
 	if result[0] == "System" {
+		wg.Add(1)
 		logSystemEvent(result)
+		wg.Done()
+
 	}
 
 	if result[0] == "Error" {
+		wg.Add(1)
 		logErrorEvent(result)
+		wg.Done()
 	}
 
 	if result[0] == "Account" {
+		wg.Add(1)
 		logAccountTransactionEvent(result)
+		wg.Done()
+
+
 	}
 
 	if result[0] == "DUMPLOG" {
 		if len(result) == 3 {
 			//DUMP with specific user
+			wg.Wait()
 			dumpUser(result[1], result[2])
 		} else if len(result) == 2 {
 			//DUMP everything
+			wg.Wait()
 			dump(result[1])
 		}
 	}
@@ -98,6 +125,7 @@ func logUserEvent(result []string) {
 		panic(err)
 	}
 
+
 }
 
 func logQuoteEvent(result []string) {
@@ -105,6 +133,7 @@ func logQuoteEvent(result []string) {
 	if err := sessionGlobal.Query("INSERT INTO quote_server (time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , " + result[7] + ", '" + result[8] + "')").Exec(); err != nil {
 		panic(err)
 	}
+
 
 }
 
@@ -114,6 +143,7 @@ func logSystemEvent(result []string) {
 		panic(err)
 	}
 
+
 }
 
 func logAccountTransactionEvent(result []string) {
@@ -121,6 +151,7 @@ func logAccountTransactionEvent(result []string) {
 	if err := sessionGlobal.Query("INSERT INTO account_transaction (time, server, transactionNum, action, userid, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "')").Exec(); err != nil {
 		panic(err)
 	}
+
 
 }
 
@@ -130,6 +161,7 @@ func logErrorEvent(result []string) {
 		panic(err)
 	}
 
+
 }
 
 func logDebugEvent(result []string) {
@@ -137,6 +169,7 @@ func logDebugEvent(result []string) {
 	if err := sessionGlobal.Query("INSERT INTO debug_event (time, server, transactionNum, command, userid, stocksymbols, funds, debugMessage) VALUES ('" + result[1] + "', " + result[2] + "', " + result[3] + "', " + result[4] + "', " + result[5] + "', " + result[6] + "', " + result[7] + "', " + result[8] + "', " + result[9] + ")").Exec(); err != nil {
 		panic(err)
 	}
+
 
 }
 
@@ -184,6 +217,9 @@ func dumpUser(userId string, filename string) {
 }
 
 func dump(filename string) {
+
+	fmt.Println("Starting dump log")
+
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	root := etree.NewElement("log")
