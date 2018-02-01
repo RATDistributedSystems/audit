@@ -3,11 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net"
-	"os"
 	"strconv"
 	"strings"
+
 	"sync"
+	gotime "time"
 
 	"github.com/RATDistributedSystems/utilities"
 	"github.com/beevik/etree"
@@ -31,14 +33,13 @@ func main() {
 	session, err := cluster.CreateSession()
 	sessionGlobal = session
 	if err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 	addr, protocol := configs.GetServerDetails("audit")
 	l, err := net.Listen(protocol, addr)
 	if err != nil {
-		fmt.Println("Error listening:", err.Error())
-		os.Exit(1)
+		log.Fatalln(err.Error())
 	}
 	// Close the listener when the application closes.
 	defer l.Close()
@@ -48,8 +49,7 @@ func main() {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
 		if err != nil {
-			fmt.Println("Error accepting: ", err.Error())
-			os.Exit(1)
+			log.Fatalln(err.Error())
 		}
 		// Handle connections in a new goroutine.
 		go handleRequest(conn, &wg)
@@ -57,17 +57,16 @@ func main() {
 }
 
 // Handles incoming requests.
+
 func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 	// will listen for message to process ending in newline (\n)
 	print("received request")
+
 	message, _ := bufio.NewReader(conn).ReadString('\n')
-	//remove new line character and any spaces received
-	message = strings.TrimSuffix(message, "\n")
-	message = strings.TrimSpace(message)
-	//try to split the message into tokens for processing
+	message = strings.TrimSpace(strings.TrimSuffix(message, "\n"))
+	log.Printf("Received request: %s\n", message)
 	result := strings.Split(string(message), ",")
-	//if not enough arguments, or incorrect format
-	//send NA and close connection
+	defer conn.Close()
 
 	//add user event to database
 	//time, server, transactionNum, command, userid, funds
@@ -78,31 +77,27 @@ func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 		wg.Done()
 
 	}
-	//add quote event to database
-	//time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey
+
 	if result[0] == "Quote" {
 		wg.Add(1)
 		logQuoteEvent(result)
 		wg.Done()
 
 	}
-	//add system event to database
-	//
+
 	if result[0] == "System" {
 		wg.Add(1)
 		logSystemEvent(result)
 		wg.Done()
 
 	}
-	//add error event to db
+
 	if result[0] == "Error" {
 		wg.Add(1)
 		logErrorEvent(result)
 		wg.Done()
 	}
 
-	//add account to db
-	//time, server, transactionNum, action, userid, funds
 	if result[0] == "Account" {
 		wg.Add(1)
 		logAccountTransactionEvent(result)
@@ -110,7 +105,7 @@ func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 
 
 	}
-	fmt.Println(result[0])
+
 	if result[0] == "DUMPLOG" {
 		if len(result) == 3 {
 			//DUMP with specific user
@@ -122,84 +117,83 @@ func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 			dump(result[1])
 		}
 	}
-	// Close the connection when you're done with it.
-	conn.Close()
 }
 
-func logUserEvent(result []string, wg *sync.WaitGroup) {
+func logUserEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO usercommands (time, server, transactionNum, command, userid, stockSymbol, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , '" + result[7] + "')").Exec(); err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 
 }
 
-func logQuoteEvent(result []string, wg *sync.WaitGroup) {
+func logQuoteEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO quote_server (time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , " + result[7] + ", '" + result[8] + "')").Exec(); err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 
 }
 
-func logSystemEvent(result []string, wg *sync.WaitGroup) {
+func logSystemEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO system_event (time, server, transactionNum, command, userid, stocksymbol, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "', '" + result[7] + "')").Exec(); err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 
 }
 
-func logAccountTransactionEvent(result []string, wg *sync.WaitGroup) {
+func logAccountTransactionEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO account_transaction (time, server, transactionNum, action, userid, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "')").Exec(); err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 
 }
 
-func logErrorEvent(result []string, wg *sync.WaitGroup) {
+func logErrorEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO error_event (time, server, transactionNum, command, userid, stocksymbols, funds, errorMessage) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + "', '" + result[4] + "', '" + result[5] + "', '" + result[6] + "', '" + result[7] + "', '" + result[8] + "', '" + result[9] + "')").Exec(); err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 
 }
 
-func logDebugEvent(result []string, wg *sync.WaitGroup) {
+func logDebugEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO debug_event (time, server, transactionNum, command, userid, stocksymbols, funds, debugMessage) VALUES ('" + result[1] + "', " + result[2] + "', " + result[3] + "', " + result[4] + "', " + result[5] + "', " + result[6] + "', " + result[7] + "', " + result[8] + "', " + result[9] + ")").Exec(); err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 
 }
 
-func dumpUser(userId string, filename string, wg *sync.WaitGroup) {
+func dumpUser(userId string, filename string) {
 
-	wg.Wait()
 	var time string
 	var server string
 	var transactionNum string
 	var command string
 	var stockSymbol string
 	var funds string
+	filename = strings.TrimSpace(strings.TrimSuffix(filename, "\n"))
+	filename = addTimestampToFilename(filename)
 
-	fmt.Println("In dump user with " + userId + " and " + filename)
+	log.Printf("Dumping user %s to file: %s\n", userId, filename)
 
 	//check if user exists
 	var count int
 	if err := sessionGlobal.Query("SELECT count(*) FROM users WHERE userid='" + userId + "'").Scan(&count); err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 	if count == 0 {
-		fmt.Sprintf("No such user exists")
+		log.Printf("User %s doesn't exist\n", userId)
 		return
 	}
 
@@ -214,7 +208,7 @@ func dumpUser(userId string, filename string, wg *sync.WaitGroup) {
 	}
 
 	if err := iter.Close(); err != nil {
-		panic(fmt.Sprintf("problem creating session", err))
+		panic(err)
 	}
 
 	doc.Indent(2)
@@ -222,19 +216,17 @@ func dumpUser(userId string, filename string, wg *sync.WaitGroup) {
 
 }
 
-func dump(filename string, wg *sync.WaitGroup) {
+func dump(filename string) {
 
-	
-	wg.Wait()
 	fmt.Println("Starting dump log")
 
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	root := etree.NewElement("log")
 	doc.SetRoot(root)
-
-	filename = strings.TrimSuffix(filename, "\n")
-	filename = strings.TrimSpace(filename)
+	filename = strings.TrimSpace(strings.TrimSuffix(filename, "\n"))
+	filename = addTimestampToFilename(filename)
+	log.Printf("Dumping all users to %s\n", filename)
 
 	var time string
 	var server string
@@ -253,7 +245,7 @@ func dump(filename string, wg *sync.WaitGroup) {
 
 	//check if user commands
 	if err := sessionGlobal.Query("SELECT count(*) FROM usercommands").Scan(&count); err != nil {
-		panic(fmt.Sprintf("Problem inputting to buyTriggers Table", err))
+		panic(err)
 	}
 
 	if count != 0 {
@@ -264,13 +256,13 @@ func dump(filename string, wg *sync.WaitGroup) {
 		}
 
 		if err := iter.Close(); err != nil {
-			panic(fmt.Sprintf("problem creating session", err))
+			panic(err)
 		}
 
 	}
 	//check if quote server events
 	if err := sessionGlobal.Query("SELECT count(*) FROM quote_server").Scan(&count); err != nil {
-		panic(fmt.Sprintf("Problem inputting to buyTriggers Table", err))
+		panic(err)
 	}
 
 	if count != 0 {
@@ -281,13 +273,13 @@ func dump(filename string, wg *sync.WaitGroup) {
 		}
 
 		if err := iter.Close(); err != nil {
-			panic(fmt.Sprintf("problem creating session", err))
+			panic(err)
 		}
 
 	}
 	//check if account transaction events
 	if err := sessionGlobal.Query("SELECT count(*) FROM account_transaction").Scan(&count); err != nil {
-		panic(fmt.Sprintf("Problem inputting to buyTriggers Table", err))
+		panic(err)
 	}
 
 	if count != 0 {
@@ -298,13 +290,13 @@ func dump(filename string, wg *sync.WaitGroup) {
 		}
 
 		if err := iter.Close(); err != nil {
-			panic(fmt.Sprintf("problem creating session", err))
+			panic(err)
 		}
 
 	}
 	//check if system event
 	if err := sessionGlobal.Query("SELECT count(*) FROM system_event").Scan(&count); err != nil {
-		panic(fmt.Sprintf("Problem inputting to buyTriggers Table", err))
+		panic(err)
 	}
 
 	if count != 0 {
@@ -315,13 +307,13 @@ func dump(filename string, wg *sync.WaitGroup) {
 		}
 
 		if err := iter.Close(); err != nil {
-			panic(fmt.Sprintf("problem creating session", err))
+			panic(err)
 		}
 
 	}
 	//check if error event
 	if err := sessionGlobal.Query("SELECT count(*) FROM error_event").Scan(&count); err != nil {
-		panic(fmt.Sprintf("Problem inputting to buyTriggers Table", err))
+		panic(err)
 	}
 
 	if count != 0 {
@@ -332,13 +324,13 @@ func dump(filename string, wg *sync.WaitGroup) {
 		}
 
 		if err := iter.Close(); err != nil {
-			panic(fmt.Sprintf("problem creating session", err))
+			panic(err)
 		}
 
 	}
 	//check if debug event
 	if err := sessionGlobal.Query("SELECT count(*) FROM debug_event").Scan(&count); err != nil {
-		panic(fmt.Sprintf("Problem inputting to buyTriggers Table", err))
+		panic(err)
 	}
 
 	if count != 0 {
@@ -349,13 +341,16 @@ func dump(filename string, wg *sync.WaitGroup) {
 		}
 
 		if err := iter.Close(); err != nil {
-			panic(fmt.Sprintf("problem creating session", err))
+			panic(err)
 		}
 
 	}
 
 	doc.Indent(2)
 	doc.WriteToFile(filename)
-	fmt.Println("Finished writing to file")
+}
 
+func addTimestampToFilename(f string) string {
+	t := gotime.Now()
+	return fmt.Sprintf("%s-%s", t.Format("2006-01-02_15-04-05"), f)
 }
