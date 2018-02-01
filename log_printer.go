@@ -45,7 +45,7 @@ func user_command(doc *etree.Document, ts string, srvr string, trsNum string, cm
 	transactionNum.CreateCharData(trsNum)
 	command := userCommand.CreateElement("command")
 	command.CreateCharData(cmd)
-	if uname != ""{
+	if (uname != "") && (uname != "-1"){
 		username := userCommand.CreateElement("username")
 		username.CreateCharData(uname)
 	}
