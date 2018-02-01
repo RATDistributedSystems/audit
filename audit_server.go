@@ -44,7 +44,7 @@ func main() {
 	// Close the listener when the application closes.
 	defer l.Close()
 	var wg sync.WaitGroup
-	fmt.Println("Listening on " + addr)
+	log.Printf("Listeniing on %s", addr)
 	for {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
@@ -70,7 +70,7 @@ func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 
 	//add user event to database
 	//time, server, transactionNum, command, userid, funds
-	
+
 	if result[0] == "User" {
 		wg.Add(1)
 		logUserEvent(result)
@@ -103,7 +103,6 @@ func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 		logAccountTransactionEvent(result)
 		wg.Done()
 
-
 	}
 
 	if result[0] == "DUMPLOG" {
@@ -125,7 +124,6 @@ func logUserEvent(result []string) {
 		panic(err)
 	}
 
-
 }
 
 func logQuoteEvent(result []string) {
@@ -133,7 +131,6 @@ func logQuoteEvent(result []string) {
 	if err := sessionGlobal.Query("INSERT INTO quote_server (time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , " + result[7] + ", '" + result[8] + "')").Exec(); err != nil {
 		panic(err)
 	}
-
 
 }
 
@@ -143,7 +140,6 @@ func logSystemEvent(result []string) {
 		panic(err)
 	}
 
-
 }
 
 func logAccountTransactionEvent(result []string) {
@@ -151,7 +147,6 @@ func logAccountTransactionEvent(result []string) {
 	if err := sessionGlobal.Query("INSERT INTO account_transaction (time, server, transactionNum, action, userid, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "')").Exec(); err != nil {
 		panic(err)
 	}
-
 
 }
 
@@ -161,7 +156,6 @@ func logErrorEvent(result []string) {
 		panic(err)
 	}
 
-
 }
 
 func logDebugEvent(result []string) {
@@ -169,7 +163,6 @@ func logDebugEvent(result []string) {
 	if err := sessionGlobal.Query("INSERT INTO debug_event (time, server, transactionNum, command, userid, stocksymbols, funds, debugMessage) VALUES ('" + result[1] + "', " + result[2] + "', " + result[3] + "', " + result[4] + "', " + result[5] + "', " + result[6] + "', " + result[7] + "', " + result[8] + "', " + result[9] + ")").Exec(); err != nil {
 		panic(err)
 	}
-
 
 }
 
@@ -217,9 +210,6 @@ func dumpUser(userId string, filename string) {
 }
 
 func dump(filename string) {
-
-	fmt.Println("Starting dump log")
-
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	root := etree.NewElement("log")
