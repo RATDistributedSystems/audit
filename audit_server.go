@@ -190,6 +190,9 @@ func dump(filename string) {
 	filename = addTimestampToFilename(filename)
 	log.Printf("Dumping all users to %s\n", filename)
 
+	filename = strings.TrimSuffix(filename, "\n")
+	filename = strings.TrimSpace(filename)
+
 	var time string
 	var server string
 	var transactionNum string
