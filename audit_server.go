@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"net"
+	"net/textproto"
 	"strconv"
 	"strings"
 	"sync"
@@ -51,17 +53,29 @@ func main() {
 			log.Fatalln(err.Error())
 		}
 		// Handle connections in a new goroutine.
-		go handleRequest(conn, &wg)
+		go handleConnection(conn, &wg)
 	}
 }
 
-func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
-	// will listen for message to process ending in newline (\n)
-	message, _ := bufio.NewReader(conn).ReadString('\n')
-	message = strings.TrimSpace(strings.TrimSuffix(message, "\n"))
-	log.Printf("Received request: %s\n", message)
-	result := strings.Split(string(message), ",")
+func handleConnection(conn net.Conn, wg *sync.WaitGroup) {
 	defer conn.Close()
+	for {
+		tp := textproto.NewReader(bufio.NewReader(conn))
+		msg, err := tp.ReadLine()
+		if err != nil {
+			if err != io.EOF {
+				log.Println("Encountered Error while processing connection")
+				log.Println(err)
+			}
+			continue
+		}
+		go handleRequest(msg, wg)
+	}
+}
+
+func handleRequest(msg string, wg *sync.WaitGroup) {
+	log.Printf("Received request: %s\n", msg)
+	result := strings.Split(string(msg), ",")
 
 	//add user event to database
 	//time, server, transactionNum, command, userid, funds
@@ -101,13 +115,12 @@ func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 	}
 
 	if result[0] == "DUMPLOG" {
+		wg.Wait()
 		if len(result) == 3 {
 			//DUMP with specific user
-			wg.Wait()
 			dumpUser(result[1], result[2])
 		} else if len(result) == 2 {
 			//DUMP everything
-			wg.Wait()
 			dump(result[1])
 		}
 	}
