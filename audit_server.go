@@ -7,9 +7,8 @@ import (
 	"net"
 	"strconv"
 	"strings"
-
 	"sync"
-	gotime "time"
+	"time"
 
 	"github.com/RATDistributedSystems/utilities"
 	"github.com/beevik/etree"
@@ -56,12 +55,8 @@ func main() {
 	}
 }
 
-// Handles incoming requests.
-
 func handleRequest(conn net.Conn, wg *sync.WaitGroup) {
 	// will listen for message to process ending in newline (\n)
-	print("received request")
-
 	message, _ := bufio.NewReader(conn).ReadString('\n')
 	message = strings.TrimSpace(strings.TrimSuffix(message, "\n"))
 	log.Printf("Received request: %s\n", message)
@@ -168,7 +163,7 @@ func logDebugEvent(result []string) {
 
 func dumpUser(userId string, filename string) {
 
-	var time string
+	var transactionTime string
 	var server string
 	var transactionNum string
 	var command string
@@ -196,8 +191,8 @@ func dumpUser(userId string, filename string) {
 	doc.SetRoot(root)
 
 	iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, stocksymbol, funds FROM usercommands WHERE userid='" + userId + "'").Iter()
-	for iter.Scan(&time, &server, &transactionNum, &command, &stockSymbol, &funds) {
-		user_command(doc, time, server, transactionNum, command, userId, stockSymbol, funds)
+	for iter.Scan(&transactionTime, &server, &transactionNum, &command, &stockSymbol, &funds) {
+		user_command(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
 	}
 
 	if err := iter.Close(); err != nil {
@@ -218,7 +213,7 @@ func dump(filename string) {
 	filename = addTimestampToFilename(filename)
 	log.Printf("Dumping all users to %s\n", filename)
 
-	var time string
+	var transactionTime string
 	var server string
 	var transactionNum string
 	var command string
@@ -241,8 +236,8 @@ func dump(filename string) {
 	if count != 0 {
 
 		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM usercommands ").Iter()
-		for iter.Scan(&time, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
-			user_command(doc, time, server, transactionNum, command, userId, stockSymbol, funds)
+		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
+			user_command(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
 		}
 
 		if err := iter.Close(); err != nil {
@@ -258,8 +253,8 @@ func dump(filename string) {
 	if count != 0 {
 
 		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server ").Iter()
-		for iter.Scan(&time, &server, &transactionNum, &quoteservertime, &userId, &stockSymbol, &price, &cryptokey) {
-			quote_server(doc, time, server, transactionNum, quoteservertime, userId, stockSymbol, price, cryptokey)
+		for iter.Scan(&transactionTime, &server, &transactionNum, &quoteservertime, &userId, &stockSymbol, &price, &cryptokey) {
+			quote_server(doc, transactionTime, server, transactionNum, quoteservertime, userId, stockSymbol, price, cryptokey)
 		}
 
 		if err := iter.Close(); err != nil {
@@ -275,8 +270,8 @@ func dump(filename string) {
 	if count != 0 {
 
 		iter := sessionGlobal.Query("SELECT time, server, transactionNum, action, userid, funds FROM account_transaction ").Iter()
-		for iter.Scan(&time, &server, &transactionNum, &action, &userId, &funds) {
-			account_transaction(doc, time, server, transactionNum, action, userId, funds)
+		for iter.Scan(&transactionTime, &server, &transactionNum, &action, &userId, &funds) {
+			account_transaction(doc, transactionTime, server, transactionNum, action, userId, funds)
 		}
 
 		if err := iter.Close(); err != nil {
@@ -292,8 +287,8 @@ func dump(filename string) {
 	if count != 0 {
 
 		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM system_event ").Iter()
-		for iter.Scan(&time, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
-			system_event(doc, time, server, transactionNum, command, userId, stockSymbol, funds)
+		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
+			system_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
 		}
 
 		if err := iter.Close(); err != nil {
@@ -309,8 +304,8 @@ func dump(filename string) {
 	if count != 0 {
 
 		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage FROM error_event ").Iter()
-		for iter.Scan(&time, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &errorMessage) {
-			error_event(doc, time, server, transactionNum, command, userId, stockSymbol, funds, errorMessage)
+		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &errorMessage) {
+			error_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, errorMessage)
 		}
 
 		if err := iter.Close(); err != nil {
@@ -326,8 +321,8 @@ func dump(filename string) {
 	if count != 0 {
 
 		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage FROM debug_event ").Iter()
-		for iter.Scan(&time, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &debugMessage) {
-			debug_event(doc, time, server, transactionNum, command, userId, stockSymbol, funds, debugMessage)
+		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &debugMessage) {
+			debug_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, debugMessage)
 		}
 
 		if err := iter.Close(); err != nil {
@@ -341,6 +336,6 @@ func dump(filename string) {
 }
 
 func addTimestampToFilename(f string) string {
-	t := gotime.Now()
+	t := time.Now()
 	return fmt.Sprintf("%s-%s", t.Format("2006-01-02_15-04-05"), f)
 }
