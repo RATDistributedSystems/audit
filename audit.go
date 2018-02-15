@@ -350,5 +350,5 @@ func dump(filename string) {
 
 func addTimestampToFilename(f string) string {
 	t := time.Now()
-	return fmt.Sprintf("%s-%s", t.Format("2006-01-02_15-04-05"), f)
+	return fmt.Sprintf("%s-%s", f, t.Format("2006-01-02_15-04-05"))
 }
