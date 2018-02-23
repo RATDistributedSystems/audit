@@ -37,7 +37,7 @@ func main() {
 		panic(err)
 	}
 
-	addr, protocol := configs.GetServerDetails("audit")
+	addr, protocol := configs.GetListnerDetails("audit")
 	l, err := net.Listen(protocol, addr)
 	if err != nil {
 		log.Fatalln(err.Error())
