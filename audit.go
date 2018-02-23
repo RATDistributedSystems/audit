@@ -116,6 +116,7 @@ func handleRequest(msg string, wg *sync.WaitGroup) {
 
 	if result[0] == "DUMPLOG" {
 		wg.Wait()
+		time.Sleep(time.Second * 60)
 		if len(result) == 3 {
 			//DUMP with specific user
 			dumpUser(result[1], result[2])
