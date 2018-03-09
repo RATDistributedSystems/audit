@@ -20,8 +20,9 @@ var time_out,_  = strconv.Atoi(configs.GetValue("cassandra_timeout"))
 func main() {
 	//establish global connection param
 
-
-	cluster := gocql.NewCluster(configs.GetValue("cassandra_ip"))
+	host_no_space := strings.TrimSpace(configs.GetValue("cassandra_ip"))
+	hosts := strings.Split(host_no_space, ",")
+	cluster := gocql.NewCluster(hosts...)
 	cluster.ConnectTimeout = time.Second * time.Duration(time_out)
 	cluster.Keyspace = configs.GetValue("cassandra_keyspace")
 	proto, err := strconv.Atoi(configs.GetValue("cassandra_proto"))
