@@ -23,7 +23,9 @@ var configs = utilities.GetConfigurationFile("config.json")
 func main() {
 	//establish global connection param
 
-	cluster := gocql.NewCluster(configs.GetValue("cassandra_ip"))
+	host_no_space := strings.TrimSpace(configs.GetValue("cassandra_ip"))
+	hosts := strings.Split(host_no_space, ",")
+	cluster := gocql.NewCluster(hosts...)
 	cluster.Keyspace = configs.GetValue("cassandra_keyspace")
 	proto, err := strconv.Atoi(configs.GetValue("cassandra_proto"))
 	if err != nil {
@@ -109,14 +111,14 @@ func handleRequest(msg string, wg *sync.WaitGroup) {
 
 	if result[0] == "Account" {
 		wg.Add(1)
-		logAccountTransactionEvent(result)
+		//logAccountTransactionEvent(result)
 		wg.Done()
 
 	}
 
 	if result[0] == "DUMPLOG" {
 		wg.Wait()
-		time.Sleep(time.Second * 60)
+		time.Sleep(time.Second * 10)
 		if len(result) == 3 {
 			//DUMP with specific user
 			dumpUser(result[1], result[2])
@@ -237,19 +239,22 @@ func dump(filename string) {
 	var cryptokey string
 	var price string
 	var userId string
-	var action string
+	//var action string
 	var count int
-	var errorMessage string
-	var debugMessage string
+	//var errorMessage string
+	//var debugMessage string
 
 	//check if user commands
+	/*
 	if err := sessionGlobal.Query("SELECT count(*) FROM usercommands").Scan(&count); err != nil {
 		panic(err)
 	}
+	*/
 
+	count = 1
 	if count != 0 {
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM usercommands ").PageSize(1000).Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM usercommands where server='TS3'").PageSize(5000).Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
 			user_command(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
 		}
@@ -260,13 +265,15 @@ func dump(filename string) {
 
 	}
 	//check if quote server events
+	/*
 	if err := sessionGlobal.Query("SELECT count(*) FROM quote_server").Scan(&count); err != nil {
 		panic(err)
 	}
-
+	*/
+	count = 1
 	if count != 0 {
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server ").PageSize(1000).Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server where server='TS3'").PageSize(5000).Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &quoteservertime, &userId, &stockSymbol, &price, &cryptokey) {
 			quote_server(doc, transactionTime, server, transactionNum, quoteservertime, userId, stockSymbol, price, cryptokey)
 		}
@@ -276,6 +283,7 @@ func dump(filename string) {
 		}
 
 	}
+	
 	//check if account transaction events
 	if err := sessionGlobal.Query("SELECT count(*) FROM account_transaction").Scan(&count); err != nil {
 		panic(err)
@@ -344,9 +352,11 @@ func dump(filename string) {
 		}
 
 	}
+	
 
 	doc.Indent(2)
 	doc.WriteToFile(filename)
+	fmt.Println("Done!")
 }
 
 func addTimestampToFilename(f string) string {

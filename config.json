@@ -12,12 +12,12 @@
         }, 
         "audit" : {
             "address": "localhost",
-            "port": "44442",
+            "port": "44443",
             "protocol": "tcp"
         }, 
         "quote" : {
             "address": "localhost",
-            "port": "44445",
+            "port": "44446",
             "protocol": "tcp"
         }
     },
@@ -25,6 +25,8 @@
     "misc" : {
         "cassandra_ip" : "localhost",
         "cassandra_keyspace" : "userdb",
-        "cassandra_proto" : "4"
+        "cassandra_proto" : "4",
+        "cassandra_page_size" : "5000",
+        "cassandra_timeout" : "10"
     } 
 }
