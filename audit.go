@@ -22,7 +22,7 @@ var configs = utilities.GetConfigurationFile("config.json")
 
 func main() {
 	//establish global connection param
-
+	time.Sleep(time.Second * 60)
 	host_no_space := strings.TrimSpace(configs.GetValue("cassandra_ip"))
 	hosts := strings.Split(host_no_space, ",")
 	cluster := gocql.NewCluster(hosts...)
@@ -239,16 +239,16 @@ func dump(filename string) {
 	var cryptokey string
 	var price string
 	var userId string
-	//var action string
+	var action string
 	var count int
-	//var errorMessage string
-	//var debugMessage string
+	var errorMessage string
+	var debugMessage string
 
 	//check if user commands
 	/*
-	if err := sessionGlobal.Query("SELECT count(*) FROM usercommands").Scan(&count); err != nil {
-		panic(err)
-	}
+		if err := sessionGlobal.Query("SELECT count(*) FROM usercommands").Scan(&count); err != nil {
+			panic(err)
+		}
 	*/
 
 	count = 1
@@ -266,9 +266,9 @@ func dump(filename string) {
 	}
 	//check if quote server events
 	/*
-	if err := sessionGlobal.Query("SELECT count(*) FROM quote_server").Scan(&count); err != nil {
-		panic(err)
-	}
+		if err := sessionGlobal.Query("SELECT count(*) FROM quote_server").Scan(&count); err != nil {
+			panic(err)
+		}
 	*/
 	count = 1
 	if count != 0 {
@@ -283,7 +283,7 @@ func dump(filename string) {
 		}
 
 	}
-	
+
 	//check if account transaction events
 	if err := sessionGlobal.Query("SELECT count(*) FROM account_transaction").Scan(&count); err != nil {
 		panic(err)
@@ -352,7 +352,6 @@ func dump(filename string) {
 		}
 
 	}
-	
 
 	doc.Indent(2)
 	doc.WriteToFile(filename)

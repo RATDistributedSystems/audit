@@ -1,7 +1,6 @@
 FROM scratch
 
-COPY audit /app/
-COPY config.json /app/
+COPY audit config.json /app/
 WORKDIR "/app"
-EXPOSE 44442
+EXPOSE 44443
 CMD ["./audit"]

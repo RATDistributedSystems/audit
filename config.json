@@ -23,7 +23,7 @@
     },
 
     "misc" : {
-        "cassandra_ip" : "localhost",
+        "cassandra_ip" : "localhost:9043",
         "cassandra_keyspace" : "userdb",
         "cassandra_proto" : "4",
         "cassandra_page_size" : "5000",
