@@ -11,7 +11,7 @@
             "protocol": "tcp"
         }, 
         "audit" : {
-            "address": "localhost",
+            "address": "0.0.0.0",
             "port": "44443",
             "protocol": "tcp"
         }, 
@@ -23,7 +23,7 @@
     },
 
     "misc" : {
-        "cassandra_ip" : "localhost:9043",
+        "cassandra_ip" : "ratauditdb",
         "cassandra_keyspace" : "userdb",
         "cassandra_proto" : "4",
         "cassandra_page_size" : "5000",

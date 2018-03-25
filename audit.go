@@ -7,45 +7,34 @@ import (
 	"log"
 	"net"
 	"net/textproto"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/RATDistributedSystems/utilities"
+	"github.com/RATDistributedSystems/utilities/ratdatabase"
 	"github.com/beevik/etree"
 	"github.com/gocql/gocql"
 )
 
 var sessionGlobal *gocql.Session
-var configs = utilities.GetConfigurationFile("config.json")
+var configs = utilities.Load()
 
 func main() {
-	//establish global connection param
-	time.Sleep(time.Second * 60)
-	host_no_space := strings.TrimSpace(configs.GetValue("cassandra_ip"))
-	hosts := strings.Split(host_no_space, ",")
-	cluster := gocql.NewCluster(hosts...)
-	cluster.Keyspace = configs.GetValue("cassandra_keyspace")
-	proto, err := strconv.Atoi(configs.GetValue("cassandra_proto"))
-	if err != nil {
-		panic("Cassandra protocol version not int")
-	}
-	cluster.ProtoVersion = proto
-
-	session, err := cluster.CreateSession()
-	sessionGlobal = session
-	if err != nil {
-		panic(err)
-	}
+	configs.Pause()
+	hostNoSpace := strings.TrimSpace(configs.GetValue("auditdb_ip"))
+	keyspace := configs.GetValue("auditdb_keyspace")
+	proto := configs.GetValue("auditdb_proto")
+	ratdatabase.InitCassandraConnection(hostNoSpace, keyspace, proto)
+	sessionGlobal = ratdatabase.CassandraConnection
 
 	addr, protocol := configs.GetListnerDetails("audit")
 	l, err := net.Listen(protocol, addr)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	// Close the listener when the application closes.
 	defer l.Close()
+
 	var wg sync.WaitGroup
 	log.Printf("Listeniing on %s", addr)
 	for {

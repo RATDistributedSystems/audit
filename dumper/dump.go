@@ -8,40 +8,27 @@ import (
 	"time"
 
 	"github.com/RATDistributedSystems/utilities"
+	"github.com/RATDistributedSystems/utilities/ratdatabase"
 	"github.com/beevik/etree"
 	"github.com/gocql/gocql"
 )
 
 var sessionGlobal *gocql.Session
-var configs = utilities.GetConfigurationFile("config.json")
-var page_size, _ = strconv.Atoi(configs.GetValue("cassandra_page_size"))
-var time_out,_  = strconv.Atoi(configs.GetValue("cassandra_timeout"))
+var configs = utilities.Load()
+var page_size, _ = strconv.Atoi(configs.GetValue("auditdb_pagesize"))
+var time_out, _ = strconv.Atoi(configs.GetValue("auditdb_timeout"))
 
 func main() {
 	//establish global connection param
 
-	host_no_space := strings.TrimSpace(configs.GetValue("cassandra_ip"))
-	hosts := strings.Split(host_no_space, ",")
-	cluster := gocql.NewCluster(hosts...)
-	cluster.ConnectTimeout = time.Second * time.Duration(time_out)
-	cluster.Keyspace = configs.GetValue("cassandra_keyspace")
-	proto, err := strconv.Atoi(configs.GetValue("cassandra_proto"))
-	if err != nil {
-		panic("Cassandra protocol version not int")
-	}
-	cluster.ProtoVersion = proto
-
-	session, err := cluster.CreateSession()
-	sessionGlobal = session
-	if err != nil {
-		panic(err)
-	}
-
+	hostNoSpace := strings.TrimSpace(configs.GetValue("auditdb_ip"))
+	keyspace := configs.GetValue("auditdb_keyspace")
+	proto := configs.GetValue("auditdb_proto")
+	ratdatabase.InitCassandraConnection(hostNoSpace, keyspace, proto)
+	sessionGlobal = ratdatabase.CassandraConnection
 	dump("1000users")
-
 }
 
-	
 func dump(filename string) {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
@@ -68,9 +55,9 @@ func dump(filename string) {
 
 	//check if user commands
 	/*
-	if err := sessionGlobal.Query("SELECT count(*) FROM usercommands").Scan(&count); err != nil {
-		panic(err)
-	}
+		if err := sessionGlobal.Query("SELECT count(*) FROM usercommands").Scan(&count); err != nil {
+			panic(err)
+		}
 	*/
 
 	count = 1
@@ -88,9 +75,9 @@ func dump(filename string) {
 	}
 	//check if quote server events
 	/*
-	if err := sessionGlobal.Query("SELECT count(*) FROM quote_server").Scan(&count); err != nil {
-		panic(err)
-	}
+		if err := sessionGlobal.Query("SELECT count(*) FROM quote_server").Scan(&count); err != nil {
+			panic(err)
+		}
 	*/
 	count = 1
 	if count != 0 {
@@ -106,74 +93,74 @@ func dump(filename string) {
 
 	}
 	/*
-	//check if account transaction events
-	if err := sessionGlobal.Query("SELECT count(*) FROM account_transaction").Scan(&count); err != nil {
-		panic(err)
-	}
-
-	if count != 0 {
-
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, action, userid, funds FROM account_transaction ").Iter()
-		for iter.Scan(&transactionTime, &server, &transactionNum, &action, &userId, &funds) {
-			account_transaction(doc, transactionTime, server, transactionNum, action, userId, funds)
-		}
-
-		if err := iter.Close(); err != nil {
+		//check if account transaction events
+		if err := sessionGlobal.Query("SELECT count(*) FROM account_transaction").Scan(&count); err != nil {
 			panic(err)
 		}
 
-	}
-	//check if system event
-	if err := sessionGlobal.Query("SELECT count(*) FROM system_event").Scan(&count); err != nil {
-		panic(err)
-	}
+		if count != 0 {
 
-	if count != 0 {
+			iter := sessionGlobal.Query("SELECT time, server, transactionNum, action, userid, funds FROM account_transaction ").Iter()
+			for iter.Scan(&transactionTime, &server, &transactionNum, &action, &userId, &funds) {
+				account_transaction(doc, transactionTime, server, transactionNum, action, userId, funds)
+			}
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM system_event ").Iter()
-		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
-			system_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
+			if err := iter.Close(); err != nil {
+				panic(err)
+			}
+
 		}
-
-		if err := iter.Close(); err != nil {
+		//check if system event
+		if err := sessionGlobal.Query("SELECT count(*) FROM system_event").Scan(&count); err != nil {
 			panic(err)
 		}
 
-	}
-	//check if error event
-	if err := sessionGlobal.Query("SELECT count(*) FROM error_event").Scan(&count); err != nil {
-		panic(err)
-	}
+		if count != 0 {
 
-	if count != 0 {
+			iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM system_event ").Iter()
+			for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
+				system_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
+			}
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage FROM error_event ").Iter()
-		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &errorMessage) {
-			error_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, errorMessage)
+			if err := iter.Close(); err != nil {
+				panic(err)
+			}
+
 		}
-
-		if err := iter.Close(); err != nil {
+		//check if error event
+		if err := sessionGlobal.Query("SELECT count(*) FROM error_event").Scan(&count); err != nil {
 			panic(err)
 		}
 
-	}
-	//check if debug event
-	if err := sessionGlobal.Query("SELECT count(*) FROM debug_event").Scan(&count); err != nil {
-		panic(err)
-	}
+		if count != 0 {
 
-	if count != 0 {
+			iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage FROM error_event ").Iter()
+			for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &errorMessage) {
+				error_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, errorMessage)
+			}
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage FROM debug_event ").Iter()
-		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &debugMessage) {
-			debug_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, debugMessage)
+			if err := iter.Close(); err != nil {
+				panic(err)
+			}
+
 		}
-
-		if err := iter.Close(); err != nil {
+		//check if debug event
+		if err := sessionGlobal.Query("SELECT count(*) FROM debug_event").Scan(&count); err != nil {
 			panic(err)
 		}
 
-	}
+		if count != 0 {
+
+			iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage FROM debug_event ").Iter()
+			for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &debugMessage) {
+				debug_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, debugMessage)
+			}
+
+			if err := iter.Close(); err != nil {
+				panic(err)
+			}
+
+		}
 	*/
 
 	doc.Indent(2)
