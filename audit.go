@@ -233,17 +233,32 @@ func dump(filename string) {
 	var errorMessage string
 	var debugMessage string
 
+	var servers string
+
+	server_iter := sessionGlobal.Query("select distinct server from usercommands").Iter()
+	for server_iter.Scan(&servers){
+		
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM usercommands where server ='" + servers + "'").PageSize(5000).Iter()
+		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
+			user_command(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
+		}
+
+		if err := iter.Close(); err != nil {
+			panic(err)
+		}
+	}
+
 	//check if user commands
 	/*
 		if err := sessionGlobal.Query("SELECT count(*) FROM usercommands").Scan(&count); err != nil {
 			panic(err)
 		}
-	*/
+	
 
 	count = 1
 	if count != 0 {
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM usercommands where server='TS3'").PageSize(5000).Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM usercommands").PageSize(5000).Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
 			user_command(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
 		}
@@ -253,6 +268,7 @@ func dump(filename string) {
 		}
 
 	}
+	*/
 	//check if quote server events
 	/*
 		if err := sessionGlobal.Query("SELECT count(*) FROM quote_server").Scan(&count); err != nil {
@@ -262,7 +278,7 @@ func dump(filename string) {
 	count = 1
 	if count != 0 {
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server where server='TS3'").PageSize(5000).Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server").PageSize(5000).Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &quoteservertime, &userId, &stockSymbol, &price, &cryptokey) {
 			quote_server(doc, transactionTime, server, transactionNum, quoteservertime, userId, stockSymbol, price, cryptokey)
 		}
