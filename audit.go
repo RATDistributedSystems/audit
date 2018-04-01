@@ -229,14 +229,14 @@ func dump(filename string) {
 	var price string
 	var userId string
 	var action string
-	var count int
+	//var count int
 	var errorMessage string
 	var debugMessage string
 
 	var servers string
 
-	server_iter := sessionGlobal.Query("select distinct server from usercommands").Iter()
-	for server_iter.Scan(&servers){
+	server_iter_user := sessionGlobal.Query("select distinct server from usercommands").Iter()
+	for server_iter_user.Scan(&servers){
 		
 		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM usercommands where server ='" + servers + "'").PageSize(5000).Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
@@ -275,10 +275,11 @@ func dump(filename string) {
 			panic(err)
 		}
 	*/
-	count = 1
-	if count != 0 {
-
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server").PageSize(5000).Iter()
+	server_iter_quote := sessionGlobal.Query("select distinct server from quote_server").Iter()
+	for server_iter_quote.Scan(&servers){
+	//count = 1
+	//if count != 0 {
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server where server ='" + servers + "'").PageSize(5000).Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &quoteservertime, &userId, &stockSymbol, &price, &cryptokey) {
 			quote_server(doc, transactionTime, server, transactionNum, quoteservertime, userId, stockSymbol, price, cryptokey)
 		}
@@ -289,14 +290,18 @@ func dump(filename string) {
 
 	}
 
+
+	/*
 	//check if account transaction events
 	if err := sessionGlobal.Query("SELECT count(*) FROM account_transaction").Scan(&count); err != nil {
 		panic(err)
 	}
+	*/
 
-	if count != 0 {
+	server_iter_account_transaction := sessionGlobal.Query("select distinct server from account_transaction").Iter()
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, action, userid, funds FROM account_transaction ").Iter()
+	for server_iter_account_transaction.Scan(&servers){
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, action, userid, funds FROM account_transaction where server='" + servers + "'").Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &action, &userId, &funds) {
 			account_transaction(doc, transactionTime, server, transactionNum, action, userId, funds)
 		}
@@ -307,13 +312,15 @@ func dump(filename string) {
 
 	}
 	//check if system event
+	/*
 	if err := sessionGlobal.Query("SELECT count(*) FROM system_event").Scan(&count); err != nil {
 		panic(err)
 	}
+	*/
+	server_iter_system := sessionGlobal.Query("select distinct server from system_event").Iter()
 
-	if count != 0 {
-
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM system_event ").Iter()
+	for server_iter_system.Scan(&servers){
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM system_event where server='" + servers + "'").Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
 			system_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
 		}
@@ -324,13 +331,17 @@ func dump(filename string) {
 
 	}
 	//check if error event
+	/*
 	if err := sessionGlobal.Query("SELECT count(*) FROM error_event").Scan(&count); err != nil {
 		panic(err)
 	}
+	*/
 
-	if count != 0 {
+	server_iter_error := sessionGlobal.Query("select distinct server from error_event").Iter()
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage FROM error_event ").Iter()
+	for server_iter_error.Scan(&servers){
+
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage FROM error_event where server='" + servers + "'").Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &errorMessage) {
 			error_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, errorMessage)
 		}
@@ -341,13 +352,15 @@ func dump(filename string) {
 
 	}
 	//check if debug event
+	/*
 	if err := sessionGlobal.Query("SELECT count(*) FROM debug_event").Scan(&count); err != nil {
 		panic(err)
 	}
+	*/
+	server_iter_debug := sessionGlobal.Query("select distinct server from debug_event").Iter()
 
-	if count != 0 {
-
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage FROM debug_event ").Iter()
+	for server_iter_debug.Scan(&servers){
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage FROM debug_event where server='" + servers + "'").Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &debugMessage) {
 			debug_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, debugMessage)
 		}
