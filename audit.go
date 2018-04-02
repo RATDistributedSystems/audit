@@ -100,7 +100,14 @@ func handleRequest(msg string, wg *sync.WaitGroup) {
 
 	if result[0] == "Account" {
 		wg.Add(1)
-		//logAccountTransactionEvent(result)
+		logAccountTransactionEvent(result)
+		wg.Done()
+
+	}
+
+	if result[0] == "Debug" {
+		wg.Add(1)
+		logDebugEvent(result)
 		wg.Done()
 
 	}
