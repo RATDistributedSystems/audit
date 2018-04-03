@@ -282,11 +282,11 @@ func dump(filename string) {
 			panic(err)
 		}
 	*/
-	server_iter_quote := sessionGlobal.Query("select distinct server from quote_server").Iter()
+	server_iter_quote := sessionGlobal.Query("select distinct userid from quote_server").Iter()
 	for server_iter_quote.Scan(&servers){
 	//count = 1
 	//if count != 0 {
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server where server ='" + servers + "'").PageSize(5000).Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, quoteservertime , userid, stocksymbol, price, cryptokey FROM quote_server where userid ='" + servers + "'").PageSize(5000).Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &quoteservertime, &userId, &stockSymbol, &price, &cryptokey) {
 			quote_server(doc, transactionTime, server, transactionNum, quoteservertime, userId, stockSymbol, price, cryptokey)
 		}
@@ -305,10 +305,10 @@ func dump(filename string) {
 	}
 	*/
 
-	server_iter_account_transaction := sessionGlobal.Query("select distinct server from account_transaction").Iter()
+	server_iter_account_transaction := sessionGlobal.Query("select distinct userid from account_transaction").Iter()
 
 	for server_iter_account_transaction.Scan(&servers){
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, action, userid, funds FROM account_transaction where server='" + servers + "'").Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, action, userid, funds FROM account_transaction where userid='" + servers + "'").Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &action, &userId, &funds) {
 			account_transaction(doc, transactionTime, server, transactionNum, action, userId, funds)
 		}
@@ -324,10 +324,10 @@ func dump(filename string) {
 		panic(err)
 	}
 	*/
-	server_iter_system := sessionGlobal.Query("select distinct server from system_event").Iter()
+	server_iter_system := sessionGlobal.Query("select distinct userid from system_event").Iter()
 
 	for server_iter_system.Scan(&servers){
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM system_event where server='" + servers + "'").Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds FROM system_event where userid='" + servers + "'").Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds) {
 			system_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
 		}
@@ -344,11 +344,11 @@ func dump(filename string) {
 	}
 	*/
 
-	server_iter_error := sessionGlobal.Query("select distinct server from error_event").Iter()
+	server_iter_error := sessionGlobal.Query("select distinct userid from error_event").Iter()
 
 	for server_iter_error.Scan(&servers){
 
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage FROM error_event where server='" + servers + "'").Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage FROM error_event where userid='" + servers + "'").Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &errorMessage) {
 			error_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, errorMessage)
 		}
@@ -364,10 +364,10 @@ func dump(filename string) {
 		panic(err)
 	}
 	*/
-	server_iter_debug := sessionGlobal.Query("select distinct server from debug_event").Iter()
+	server_iter_debug := sessionGlobal.Query("select distinct userid from debug_event").Iter()
 
 	for server_iter_debug.Scan(&servers){
-		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage FROM debug_event where server='" + servers + "'").Iter()
+		iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage FROM debug_event where userid='" + servers + "'").Iter()
 		for iter.Scan(&transactionTime, &server, &transactionNum, &command, &userId, &stockSymbol, &funds, &debugMessage) {
 			debug_event(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds, debugMessage)
 		}
