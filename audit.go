@@ -128,7 +128,7 @@ func handleRequest(msg string, wg *sync.WaitGroup) {
 func logUserEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO usercommands (time, server, transactionNum, command, userid, stockSymbol, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , '" + result[7] + "')").Exec(); err != nil {
-		panic(err)
+		log.Print(err)
 	}
 
 }
@@ -136,7 +136,7 @@ func logUserEvent(result []string) {
 func logQuoteEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO quote_server (time, server, transactionNum, price, stocksymbol, userid, quoteservertime, cryptokey) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , " + result[7] + ", '" + result[8] + "')").Exec(); err != nil {
-		panic(err)
+		log.Print(err)
 	}
 
 }
@@ -144,7 +144,7 @@ func logQuoteEvent(result []string) {
 func logSystemEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO system_event (time, server, transactionNum, command, userid, stocksymbol, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "', '" + result[7] + "')").Exec(); err != nil {
-		panic(err)
+		log.Print(err)
 	}
 
 }
@@ -152,7 +152,7 @@ func logSystemEvent(result []string) {
 func logAccountTransactionEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO account_transaction (time, server, transactionNum, action, userid, funds) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "')").Exec(); err != nil {
-		panic(err)
+		log.Print(err)
 	}
 
 }
@@ -160,7 +160,7 @@ func logAccountTransactionEvent(result []string) {
 func logErrorEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO error_event (time, server, transactionNum, command, userid, stocksymbol, funds, errorMessage) VALUES (" + result[1] + ", '" + result[2] + "', " + result[3] + ", '" + result[4] + "', '" + result[5] + "', '" + result[6] + "' , '" + result[7] + "', '" + result[8] + "')").Exec(); err != nil {
-		panic(err)
+		log.Print(err)
 	}
 
 }
@@ -168,7 +168,7 @@ func logErrorEvent(result []string) {
 func logDebugEvent(result []string) {
 
 	if err := sessionGlobal.Query("INSERT INTO debug_event (time, server, transactionNum, command, userid, stocksymbol, funds, debugMessage) VALUES ('" + result[1] + "', " + result[2] + "', " + result[3] + "', " + result[4] + "', " + result[5] + "', " + result[6] + "', " + result[7] + "', " + result[8] + "')").Exec(); err != nil {
-		panic(err)
+		log.Print(err)
 	}
 
 }
@@ -202,7 +202,7 @@ func dumpUser(userId string, filename string) {
 	root := etree.NewElement("log")
 	doc.SetRoot(root)
 
-	iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, stocksymbol, funds FROM usercommands WHERE userid='" + userId + "'").Iter()
+	iter := sessionGlobal.Query("SELECT time, server, transactionNum, command, stocksymbol, funds FROM usercommands WHERE userid='" + userId + "' ALLOW FILTERING").Iter()
 	for iter.Scan(&transactionTime, &server, &transactionNum, &command, &stockSymbol, &funds) {
 		user_command(doc, transactionTime, server, transactionNum, command, userId, stockSymbol, funds)
 	}
